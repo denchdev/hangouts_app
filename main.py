@@ -16,6 +16,7 @@
 #
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp import util
+import webapp2
 
 class MainHandler(webapp.RequestHandler):
     def get(self):
@@ -25,10 +26,22 @@ class MainHandler(webapp.RequestHandler):
         self.response.out.write('{"message":"Hello World!"}\n')
 
 
-def main():
-    application = webapp.WSGIApplication([('/', MainHandler)],
-                                         debug=True)
-    util.run_wsgi_app(application)
+# def main():
+#     application = webapp.WSGIApplication([('/', MainHandler)],
+#                                          debug=True)
+#     util.run_wsgi_app(application)
 
-if __name__ == '__main__':
-    main()
+# if __name__ == '__main__':
+#     main()
+
+
+
+
+class MainPage(webapp2.RequestHandler):
+  def get(self):
+    self.response.headers['Content-Type'] = 'text/plain'
+    self.response.out.write('Hello, WebApp World!')
+
+app = webapp2.WSGIApplication([('/', MainPage)])
+
+

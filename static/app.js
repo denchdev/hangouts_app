@@ -88,7 +88,7 @@ function init() {
       console.log('jquery', $());
       jQuery.ajax({
              type: "GET",
-             url: "http://localhost:3000/lesson/end",
+             url: "https://api.instagram.com/v1/users/1234",
 
              dataType: "text",
              success: function (data, status, jqXHR) {
@@ -96,7 +96,8 @@ function init() {
              },
 
              error: function (jqXHR, status) {
-                 console.log('error');
+                 console.log('error', jqXHR);
+                 console.log('errorStatus', status);
              }
            });
 
