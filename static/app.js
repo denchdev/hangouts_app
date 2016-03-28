@@ -1,61 +1,91 @@
 var serverPath = '//mejoprome-1.appspot.com/';
 
-var forbiddenCharacters = /[^a-zA-Z!0-9_\- ]/;
-function setText(element, text) {
-  element.innerHTML = typeof text === 'string' ?
-      text.replace(forbiddenCharacters, '') :
-      '';
-}
+var state_ = null;
+var metadata_ = null;
+var participants_ = null;
+var startData = null;
+var lesson = {};
 
-function updateStateUi(state) {
-  console.log('updateStateUi');
-  var countElement = document.getElementById('time');
-  var stateCount = state['time'];
-  console.log('stateCount');
+function initData() {
+  console.log('init data');
+  if ( gapi.hangout.data.getValue('lessonId') ) {
+    console.log('init data second', gapi.hangout.data.getValue('lessonId'));
+    lesson.id = gapi.hangout.data.getValue('lessonId');
+    lesson.title = gapi.hangout.data.getValue('title');
+    lesson.teacher = gapi.hangout.data.getValue('teacher');
+    lesson.student = gapi.hangout.data.getValue('student');
+    lesson.price = gapi.hangout.data.getValue('price');
+  } else {
+    console.log('init data first', gapi.hangout.getStartData());
+    var startData = gapi.hangout.getStartData();
+    console.log('startData', startData);
+    lesson = JSON.parse(startData);
 
-}
+    gapi.hangout.data.setValue('lessonId', '' + lesson.id);
+    gapi.hangout.data.setValue('title', '' +lesson.title);
+    gapi.hangout.data.setValue('teacher', '' +lesson.teacher);
+    gapi.hangout.data.setValue('student', '' +lesson.student);
+    gapi.hangout.data.setValue('price', '' +lesson.price);
 
-function updateParticipantsUi(participants) {
-  console.log('Participants count: ' + participants.length);
-  var participantsListElement = document.getElementById('participants');
-  setText(participantsListElement, participants.length.toString());
-}
-
-function startLesson() {
-  console.log('Button clicked');
-  var value =0;
-  var time = gapi.hangout.data.getState()['time'];
-  console.log('time', time);
-  if (time) {
-    value = parseInt(time);
+    var url = gapi.hangout.getHangoutUrl();
+    console.log('url', url);
+    $.ajax({
+      // this url for development
+      // for production change url
+      url: 'localhost:3000/lesson/' + lesson.id + '/' + url,      
+      error: function() {
+         console.log('error');
+      },
+      success: function(data) {
+         console.log('success', data);
+      },
+      type: 'GET'
+   });
   }
-  gapi.hangout.data.submitDelta({'time': '' + (time + 1)});
+}
+
+// function sendSharedData() {
+//   gapi.hangout.data.sendMessage('"' + startData + '"');
+// }
+//
+// function getSharedData(data) {
+//   lesson = JSON.parse(data);
+// }
+
+
+function createP(inner, root) {
+  var elem = document.createElement('p');
+  elem.innerHTML = inner;
+  root.appendChild(elem);
 }
 
 function render() {
-  var lesson = {};
-  lesson.user = {};
-  lesson.user.name = 'Peter';
-  lesson.user.role = 'Student';
-  lesson.subject = 'Antique Greece History';
-  lesson.hourlyRate = 10.0;
-  lesson.id = gapi.hangout.getStartData();
+  var body = document.getElementById('container');
 
-  var body = document.getElementById('body');
   var infoDiv = document.createElement('div');
-  infoDiv.innerHTML = '<h4>' + lesson.subject + ' (' + lesson.hourlyRate + '$/hr)<h4>' +
-  '<h5>' + lesson.user.name + ' ' + lesson.user.role + '</h5>' +
-  '<h5>' + 'Denis' + ' ' + 'teacher' + '</h5>' +
-  '<h4>Lesson time: <p id="time>"0:00</p> ($0.00)</h4>' +
-  '<h1>lesson - ' + lesson.id + '</h1>';
+  createP(lesson.title + ' (' + (lesson.price/100) + '$/hr)', infoDiv);
+  createP('Teacher: ' + lesson.teacher, infoDiv);
+  createP('Student: ' + lesson.student, infoDiv);
+
+  var timeDiv = document.createElement('div');
+  createP("Lesson time: <p id='time'>0:00</p>", timeDiv);
+  createP("Lesson cost: <p id='cost'>$0.00</p>", timeDiv);
 
   var controlDiv = document.createElement('div');
   controlDiv.innerHTML = '<button onClick="startLesson()">Start lesson</button>';
 
   body.appendChild(infoDiv);
+  body.appendChild(timeDiv);
   body.appendChild(controlDiv);
 
-  gapi.hangout.data.setValue('time', '0');
+  var user = gapi.hangout.getEnabledParticipants()[0];
+  var picDiv = document.createElement('div');
+  createP("<img src=" + user.person.image.url + ">", picDiv);
+  body.appendChild(picDiv);
+}
+
+function render_time() {
+  var timeDiv = $('#timeDiv');
 }
 
 // A function to be run at app initialization time which registers our callbacks
@@ -64,24 +94,24 @@ function init() {
 
   var apiReady = function(eventObj) {
     if (eventObj.isApiReady) {
-      gapi.hangout.data.onStateChanged.add(function(eventObj) {
-        updateStateUi(eventObj.state);
-      });
-      gapi.hangout.onParticipantsChanged.add(function(eventObj) {
-        updateParticipantsUi(eventObj.participants);
-      });
+      initData();
 
-      var start_data = gapi.hangout.getStartData();
-      console.log('start data', start_data);
-      console.log('start data', JSON.parse(start_data));
+      // gapi.hangout.onParticipantsAdded.add(function(eventObj) {
+      //   console.log('onParticipantsAdded', eventObj);
+      //   sendSharedData();
+      // });
+      //
+      // gapi.hangout.data.onMessageReceived.add(function(eventObj) {
+      //   console.log('eventObj', eventObj);
+      //   getSharedData(eventObj);
+      // });
+
       render();
 
       gapi.hangout.onApiReady.remove(apiReady);
     }
   };
 
-  // This application is pretty simple, but use this special api ready state
-  // event if you would like to any more complex app setup.
   gapi.hangout.onApiReady.add(apiReady);
 }
 
