@@ -50,21 +50,22 @@ function shareRef (ref) {
 }
 
 function shareRef1 () {
+  var ref = gapi.hangout.getHangoutUrl();
+  console.log('ref', ref);
+
   $.ajax({
       url: 'https://localhost:443/lesson',
-      // data: '{"id": lesson.id, "ref": "https://hangouts.google.com/12345678"}',
       dataType: 'json',
       type: 'POST',
-      // error: function(error) {
-      //    console.log('error', error);
-      // },
-      // success: function(data) {
-      //    console.log('success', data);
-      // }
-
       contentType: 'application/json',
-      data: JSON.stringify({ lesson: { id: "Yehuda", ref: "Katz" } }),
-      success: function(json) { }
+      data: JSON.stringify({ lesson: { id: lesson.id, ref: ref }}),
+
+      error: function(error) {
+         console.log('error', error);
+      },
+      success: function(data) {
+         console.log('success', data);
+      }
   });
 }
 
