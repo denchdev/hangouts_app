@@ -1,4 +1,5 @@
 var serverPath = '//mejoprome-1.appspot.com/';
+var apiPath = 'https://localhost:443/';
 
 var state_ = null;
 var metadata_ = null;
@@ -29,19 +30,42 @@ function initData() {
 
     var url = gapi.hangout.getHangoutUrl();
     console.log('url', url);
-    $.ajax({
-      // this url for development
-      // for production change url
-      url: 'localhost:3000/lesson/' + lesson.id + '/' + url,      
-      error: function() {
-         console.log('error');
-      },
-      success: function(data) {
-         console.log('success', data);
-      },
-      type: 'GET'
-   });
   }
+}
+
+function shareRef (ref) {
+  $.ajax({
+    type: 'PUT',
+    dataType: 'json',
+    url: apiPath + 'lesson',
+    headers: {"X-HTTP-Method-Override": "PUT"},
+    data: '{"id": "1", "ref": "https://hangouts.google.com/"}',
+    error: function() {
+       console.log('error');
+    },
+    success: function(data) {
+       console.log('success', data);
+    }
+ });
+}
+
+function shareRef1 () {
+  $.ajax({
+      url: 'https://localhost:443/lesson',
+      // data: '{"id": lesson.id, "ref": "https://hangouts.google.com/12345678"}',
+      dataType: 'json',
+      type: 'POST',
+      // error: function(error) {
+      //    console.log('error', error);
+      // },
+      // success: function(data) {
+      //    console.log('success', data);
+      // }
+
+      contentType: 'application/json',
+      data: JSON.stringify({ lesson: { id: "Yehuda", ref: "Katz" } }),
+      success: function(json) { }
+  });
 }
 
 // function sendSharedData() {
@@ -72,7 +96,7 @@ function render() {
   createP("Lesson cost: <p id='cost'>$0.00</p>", timeDiv);
 
   var controlDiv = document.createElement('div');
-  controlDiv.innerHTML = '<button onClick="startLesson()">Start lesson</button>';
+  controlDiv.innerHTML = '<button onClick="shareRef1()">Start lesson</button>';
 
   body.appendChild(infoDiv);
   body.appendChild(timeDiv);
