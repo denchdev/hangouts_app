@@ -28,28 +28,11 @@ function initData() {
     gapi.hangout.data.setValue('student', '' +lesson.student);
     gapi.hangout.data.setValue('price', '' +lesson.price);
 
-    var url = gapi.hangout.getHangoutUrl();
-    console.log('url', url);
+    shareRef();
   }
 }
 
-function shareRef (ref) {
-  $.ajax({
-    type: 'PUT',
-    dataType: 'json',
-    url: apiPath + 'lesson',
-    headers: {"X-HTTP-Method-Override": "PUT"},
-    data: '{"id": "1", "ref": "https://hangouts.google.com/"}',
-    error: function() {
-       console.log('error');
-    },
-    success: function(data) {
-       console.log('success', data);
-    }
- });
-}
-
-function shareRef1 () {
+function shareRef () {
   var ref = gapi.hangout.getHangoutUrl();
   console.log('ref', ref);
 
@@ -97,7 +80,7 @@ function render() {
   createP("Lesson cost: <p id='cost'>$0.00</p>", timeDiv);
 
   var controlDiv = document.createElement('div');
-  controlDiv.innerHTML = '<button onClick="shareRef1()">Start lesson</button>';
+  controlDiv.innerHTML = '<button>Start lesson</button>';
 
   body.appendChild(infoDiv);
   body.appendChild(timeDiv);
