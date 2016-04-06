@@ -1,25 +1,23 @@
 var serverPath = '//mejoprome-1.appspot.com/';
-var apiPath = 'https://localhost:443/';
-
 var state_ = null;
 var metadata_ = null;
 var participants_ = null;
 var startData = null;
 var lesson = {};
+var dispatcher = null;
 
 function initData() {
-  console.log('init data');
   if ( gapi.hangout.data.getValue('lessonId') ) {
-    console.log('init data second', gapi.hangout.data.getValue('lessonId'));
     lesson.id = gapi.hangout.data.getValue('lessonId');
     lesson.title = gapi.hangout.data.getValue('title');
     lesson.teacher = gapi.hangout.data.getValue('teacher');
     lesson.student = gapi.hangout.data.getValue('student');
     lesson.price = gapi.hangout.data.getValue('price');
-  } else {
-    console.log('init data first', gapi.hangout.getStartData());
+    lesson.ref = gapi.hangout.data.getValue('apiPath');
+
+    create_ws();
+  } else {    
     var startData = gapi.hangout.getStartData();
-    console.log('startData', startData);
     lesson = JSON.parse(startData);
 
     gapi.hangout.data.setValue('lessonId', '' + lesson.id);
@@ -27,69 +25,93 @@ function initData() {
     gapi.hangout.data.setValue('teacher', '' +lesson.teacher);
     gapi.hangout.data.setValue('student', '' +lesson.student);
     gapi.hangout.data.setValue('price', '' +lesson.price);
+    gapi.hangout.data.setValue('ref', '' +lesson.ref);
 
+    create_ws();
     shareRef();
   }
 }
 
 function shareRef () {
   var ref = gapi.hangout.getHangoutUrl();
-  console.log('ref', ref);
+  var les = { id: lesson.id, ref: ref }
 
-  $.ajax({
-      url: 'https://localhost:443/lesson',
-      dataType: 'json',
-      type: 'POST',
-      contentType: 'application/json',
-      data: JSON.stringify({ lesson: { id: lesson.id, ref: ref }}),
+  dispatcher.trigger('lesson.update', les, success_cb, error_cb);
 
-      error: function(error) {
-         console.log('error', error);
-      },
-      success: function(data) {
-         console.log('success', data);
-      }
-  });
+  function success_cb(data){
+    console.log('success_cb', data);
+  }
+  function error_cb(error){
+    console.log('error_cb', error);
+  }
+
+  dispatcher.bind('mew_message', function(data) {
+    console.log('new_message', data);
+  })
 }
 
-// function sendSharedData() {
-//   gapi.hangout.data.sendMessage('"' + startData + '"');
-// }
-//
-// function getSharedData(data) {
-//   lesson = JSON.parse(data);
-// }
+function create_ws() {
+  dispatcher = new WebSocketRails("wss://"+lesson.ref+":443/websocket/");
 
+  dispatcher.on_open = function(data) {
+    console.log('Connection has been established: ', data);
+    // You can trigger new server events inside this callback if you wish.
+  }
+}
 
-function createP(inner, root) {
-  var elem = document.createElement('p');
+function createTag(tag, inner, styleClass, root) {
+  var elem = document.createElement(tag);
+  elem.className = styleClass;
   elem.innerHTML = inner;
   root.appendChild(elem);
 }
 
 function render() {
+  var t_user = gapi.hangout.getEnabledParticipants()[0];
+  if(gapi.hangout.getEnabledParticipants()[1]) {
+    var s_user = gapi.hangout.getEnabledParticipants()[1];
+  }
+
   var body = document.getElementById('container');
 
+  var headerDiv = document.createElement('div');
+  headerDiv.innerHTML =  "<img src='https://sharetribe.s3.amazonaws.com/" +
+   "images/communities/wide_logos/5145/header/logo3.png?1423572255' " +
+   "class='headerImage'>";
+
   var infoDiv = document.createElement('div');
-  createP(lesson.title + ' (' + (lesson.price/100) + '$/hr)', infoDiv);
-  createP('Teacher: ' + lesson.teacher, infoDiv);
-  createP('Student: ' + lesson.student, infoDiv);
+  createTag('p', lesson.title, 'lesson', infoDiv);
+  createTag('p', '(' + (lesson.price/100) + '$/hr)', 'lesson', infoDiv);
+
+  var teacherDiv = document.createElement('div');
+  teacherDiv.className = 'person';
+  createTag('div', "<img src=" + t_user.person.image.url + " class='avatar'>",
+    'avatardiv', teacherDiv);
+  createTag('div', "<span>" + lesson.teacher + "</span>",
+    'avatardiv', teacherDiv);
+  infoDiv.appendChild(teacherDiv);
+  if(gapi.hangout.getEnabledParticipants()[1]) {
+    var studentDiv = document.createElement('div');
+    studentDiv.className = 'person';
+    createTag('div', "<img src=" + s_user.person.image.url + " class='avatar'>",
+      'avatardiv', studentDiv);
+    createTag('div', "<span>" + lesson.student + "</span>",
+      'avatardiv', studentDiv);
+    infoDiv.appendChild(studentDiv);
+  }
+
 
   var timeDiv = document.createElement('div');
-  createP("Lesson time: <p id='time'>0:00</p>", timeDiv);
-  createP("Lesson cost: <p id='cost'>$0.00</p>", timeDiv);
+  createTag('p',"Lesson time: <p id='time'>0:00</p>", 'timeDiv', timeDiv);
+  createTag('p', "Lesson cost: <p id='cost'>$0.00</p>", 'timeDiv', timeDiv);
 
   var controlDiv = document.createElement('div');
   controlDiv.innerHTML = '<button>Start lesson</button>';
 
+  body.appendChild(headerDiv);
   body.appendChild(infoDiv);
   body.appendChild(timeDiv);
   body.appendChild(controlDiv);
-
-  var user = gapi.hangout.getEnabledParticipants()[0];
-  var picDiv = document.createElement('div');
-  createP("<img src=" + user.person.image.url + ">", picDiv);
-  body.appendChild(picDiv);
 }
 
 function render_time() {
@@ -103,18 +125,11 @@ function init() {
   var apiReady = function(eventObj) {
     if (eventObj.isApiReady) {
       initData();
-
-      // gapi.hangout.onParticipantsAdded.add(function(eventObj) {
-      //   console.log('onParticipantsAdded', eventObj);
-      //   sendSharedData();
-      // });
-      //
-      // gapi.hangout.data.onMessageReceived.add(function(eventObj) {
-      //   console.log('eventObj', eventObj);
-      //   getSharedData(eventObj);
-      // });
-
       render();
+
+      gapi.hangout.onParticipantsAdded.add(function(eventObj) {
+        render();
+      });
 
       gapi.hangout.onApiReady.remove(apiReady);
     }

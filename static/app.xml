@@ -24,12 +24,13 @@
 <!-- The hangout API JavaScript. Always include this first -->
 <script src="//hangoutsapi.talkgadget.google.com/hangouts/api/hangout.js?v=1.0"></script>
 
+<script src="//mejoprome-1.appspot.com/static/websocket_rails.0.0.1.min.js"></script>
+<script src="//mejoprome-1.appspot.com/static/clock.js"></script>
 <script src="//mejoprome-1.appspot.com/static/app.js"></script>
 
 <link href="//mejoprome-1.appspot.com/static/app.css" rel="stylesheet">
 
-<div class='container' id='container'>
-  <h1>MEJOPROME</h1>
+<div class='container' id='container'> 
 
 </div>
 

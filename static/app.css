@@ -1,4 +1,46 @@
 .container {
   background-color: white;
-  height: 1000px;
+  border-radius: 20px;
+  padding: 3%;
+}
+
+.headerImage {
+  width: 80%;
+  margin-right: 10%;
+  margin-left: 10%;
+}
+
+.lesson {
+  color: #a64c5d;
+  font-family: 'Source Sans Pro', helvetica, sans-serif;
+  font-size: 24px;
+  margin: 0;
+  padding:0;
+}
+.person {
+  border: solid 3px #a64c5d;
+  /*border-radius: 8px;*/
+  margin: 3px;
+  vertical-align:super;
+  border-left: 50%;
+  padding: 2%;
+}
+
+.avatardiv {
+  width: 20%;
+  height: 40px;
+  display: inline-block;
+  font-size: 24px;
+}
+
+.avatar {
+  height: 90%;
+  border-radius: 50%;
+}
+
+.namediv {
+  width: 80%;
+  display: inline-block;
+  background-color: yellow;
+  margin: 0 auto;
 }
